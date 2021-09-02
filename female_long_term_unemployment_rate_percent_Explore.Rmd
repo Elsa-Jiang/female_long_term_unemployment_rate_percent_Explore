@@ -1,0 +1,85 @@
+---
+title: "FemaleUnemploymentRate"
+author: "Elsa_J"
+date: "2021/8/31"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+### Load Data
+# First, I wanna know the structure of the dataframe.
+```{r}
+FLTU <- read.csv('female_long_term_unemployment_rate_percent.csv',
+                 check.names = F)
+names(FLTU)
+summary(FLTU)
+```
+#Obviously, the format is not what I want. Use gather() tidy it.
+```{r}
+library(tidyr)
+FLTU2 <- gather(FLTU, "year", "UnemRate", 2: 29)
+names(FLTU2)
+summary(FLTU2)
+#change column "year" from character to numerical
+FLTU2$year <- as.numeric(FLTU2$year)
+summary(FLTU2)
+```
+
+### Plot
+# First: Data points rate over 124 countries from 1990 to 2017
+```{r}
+library(ggplot2)
+qplot(x = year, data = subset(FLTU2, !is.na(UnemRate)), binwidth = 0.5,
+      xlab = 'Year',
+      ylab = 'Data Points Count')
+```
+# The data before the year 2009 are less than 75, whcih means the data is not representative. I am gonna focus on the year between 2009 and 2017. However, that does not I will give up the other data.
+```{r}
+FLTU2t <- filter(FLTU2, FLTU2$year >= 2009)
+qplot(x = year, data = subset(FLTU2t, !is.na(FLTU2t$UnemRate)), binwidth = 0.5,
+      xlab = 'Year',
+      ylab = 'Data Points Count')
+```
+
+
+#Second: Average women long term unemployment rate from 124 countries from 2009 to 2017
+```{r}
+qplot(x = year, y = UnemRate, data = subset(FLTU2, !is.na(UnemRate)),
+      geom = 'boxplot',
+      xlab = 'Year',
+      ylab = 'Women UnemRate per year',
+      aes(group = year))
+by(FLTU2$UnemRate, FLTU2$year, summary)
+
+qplot(x = year, y = UnemRate, data = subset(FLTU2t, !is.na(UnemRate)),
+      geom = 'boxplot',
+      xlab = 'Year',
+      ylab = 'Women UnemRate per year',
+      aes(group = year))
+by(FLTU2t$UnemRate, FLTU2t$year, summary)
+```
+# Lowest: year 1990 with 0.6640(13 data points)
+# highest: year 1996 with 1.87(34 data points). 
+# Between year 2009 and 2017: 
+# Lowest: year 2017 with 1.17(75 data points)
+# highest: year 2011 with 1.345(80 data points). 
+
+#Third: Outliers
+# The two outliers in the year 2006 and 2007 are the highest in the data set. I want to know whether these two outliers from the same country, umemployment rate of other years from that country and what happened to that country.
+```{r}
+qplot(x = country, y = UnemRate, data = subset(FLTU2, !is.na(UnemRate)),
+      geom = 'boxplot',
+      xlab = 'Country',
+      ylab = 'Women UnemRate per country')
+by(FLTU2$UnemRate, FLTU2$country, summary)
+```
+# The answer is North Macedonia. The median women long term unemployment is 9.575, which is the highest over 124 countries. 11.30, the highest rate, is not unusual in this country. To the contrary, 6.7 is the outlier as a unexpected low unempolyment rate for this country.
+```{r}
+qplot(x = year, y = UnemRate,
+      data = subset(FLTU2, country=='North Macedonia'),
+      xlab = 'North Macedonia',
+      ylab = 'Women UnemRate in North Macedonia')
+by(FLTU2$UnemRate, FLTU2$country, summary)
+```
+# From this chart, the country is doing better and better. The women long term unemployment rate is decreasing dramatically these years, especially in the years between 2014 and 2016.
